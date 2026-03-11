@@ -19,11 +19,14 @@ build/
 # Database
 data/
 *.db
+*.db-shm
+*.db-wal
 *.sqlite3
 
-# IDE
+# IDE / tools
 .vscode/
 .idea/
+.claude/
 *.swp
 *.swo
 
