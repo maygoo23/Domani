@@ -15,6 +15,7 @@ env:
   REGISTRY: ghcr.io
   # Docker image names must be lowercase; github.repository may have mixed case
   IMAGE_NAME: ${{ github.repository_owner }}/domani
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
   contents: read
