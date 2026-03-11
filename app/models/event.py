@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 
 
-class EventType(str, enum.Enum):
+class EventType(enum.StrEnum):
     WHOIS_CHECK = "whois_check"
     STATUS_CHANGE = "status_change"
     ALERT_SENT = "alert_sent"

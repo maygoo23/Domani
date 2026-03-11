@@ -7,7 +7,7 @@ from sqlalchemy.orm import relationship
 from ..database import Base
 
 
-class DomainStatus(str, enum.Enum):
+class DomainStatus(enum.StrEnum):
     UNKNOWN = "unknown"
     ACTIVE = "active"
     EXPIRING_SOON = "expiring_soon"
