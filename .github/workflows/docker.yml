@@ -9,6 +9,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch:  # Allow manual runs from the GitHub Actions UI
 
 env:
   REGISTRY: ghcr.io
