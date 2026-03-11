@@ -14,6 +14,12 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
+# Grant GITHUB_TOKEN packages:write at workflow level so GHCR allows
+# creating new packages on first push to a personal account.
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   lint:
     name: Lint
