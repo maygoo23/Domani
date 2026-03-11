@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page header -->
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    <h1 class="h3 mb-0 fw-bold">Dashboard</h1>
+    <p class="text-muted small mb-0 mt-1">Monitor domain expiration and availability</p>
+  </div>
+  <a href="/domains/add" class="btn btn-primary">
+    <i class="fa-solid fa-plus me-2"></i>Add Domain
+  </a>
+</div>
+
+<!-- Stats cards -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3">
+    <div class="card domani-stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="domani-stat-label">Total Tracked</p>
+            <p class="domani-stat-value">{{ total_domains }}</p>
+          </div>
+          <div class="domani-stat-icon text-primary">
+            <i class="fa-solid fa-globe"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card domani-stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="domani-stat-label">Expiring in 30d</p>
+            <p class="domani-stat-value {% if expiring_30 > 0 %}text-warning{% endif %}">{{ expiring_30 }}</p>
+          </div>
+          <div class="domani-stat-icon text-warning">
+            <i class="fa-solid fa-clock"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card domani-stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="domani-stat-label">Expiring in 7d</p>
+            <p class="domani-stat-value {% if expiring_7 > 0 %}text-danger{% endif %}">{{ expiring_7 }}</p>
+          </div>
+          <div class="domani-stat-icon text-danger">
+            <i class="fa-solid fa-fire"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card domani-stat-card h-100">
+      <div class="card-body">
+        <div class="d-flex align-items-center justify-content-between">
+          <div>
+            <p class="domani-stat-label">Critical / Available</p>
+            <p class="domani-stat-value {% if critical_count > 0 %}text-danger domani-pulse{% endif %}">{{ critical_count }}</p>
+          </div>
+          <div class="domani-stat-icon text-danger">
+            <i class="fa-solid fa-bolt"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Domain table -->
+<div class="card domani-card">
+  <div class="card-header d-flex align-items-center justify-content-between py-3">
+    <h2 class="h6 mb-0 fw-semibold">
+      <i class="fa-solid fa-list me-2 text-primary"></i>Tracked Domains
+    </h2>
+    <!-- Filter bar -->
+    <div class="d-flex align-items-center gap-2">
+      <input type="search" id="domainSearch" class="form-control form-control-sm domani-search" placeholder="Search domains…" style="width:200px;" />
+      <select id="statusFilter" class="form-select form-select-sm domani-select" style="width:160px;">
+        <option value="">All Statuses</option>
+        <option value="active">Active</option>
+        <option value="expiring_soon">Expiring Soon</option>
+        <option value="expiring_critical">Critical</option>
+        <option value="expired">Expired</option>
+        <option value="redemption">Redemption</option>
+        <option value="pending_delete">Pending Delete</option>
+        <option value="available">Available</option>
+        <option value="error">Error</option>
+      </select>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    {% if domains %}
+    <div class="table-responsive">
+      <table class="table table-hover domani-table mb-0" id="domainTable">
+        <thead>
+          <tr>
+            <th>Domain</th>
+            <th>Status</th>
+            <th>Registrar</th>
+            <th>Expires</th>
+            <th>Last Checked</th>
+            <th>Watch</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for domain in domains %}
+          {% set label, color = domain.status_label %}
+          <tr class="domani-domain-row" data-name="{{ domain.name }}" data-status="{{ domain.status }}">
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="domani-domain-favicon">
+                  <i class="fa-solid fa-globe text-muted" style="font-size:0.8rem;"></i>
+                </div>
+                <div>
+                  <a href="/domains/{{ domain.id }}" class="domani-domain-link fw-semibold">{{ domain.name }}</a>
+                  {% if domain.tags %}
+                  <div class="mt-1">
+                    {% for tag in domain.tag_list %}
+                    <span class="badge domani-tag">{{ tag }}</span>
+                    {% endfor %}
+                  </div>
+                  {% endif %}
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="badge domani-status-badge domani-status-{{ domain.status }}">
+                {% if domain.status == 'pending_delete' %}<i class="fa-solid fa-skull me-1"></i>
+                {% elif domain.status == 'available' %}<i class="fa-solid fa-star me-1"></i>
+                {% elif domain.status in ('expiring_soon', 'expiring_critical') %}<i class="fa-solid fa-clock me-1"></i>
+                {% elif domain.status == 'active' %}<i class="fa-solid fa-circle-check me-1"></i>
+                {% elif domain.status == 'error' %}<i class="fa-solid fa-triangle-exclamation me-1"></i>
+                {% endif %}
+                {{ label }}
+              </span>
+            </td>
+            <td class="text-muted small">{{ domain.registrar or "—" }}</td>
+            <td>
+              {% if domain.expires_at %}
+              <div class="domani-expiry {% if domain.days_until_expiry is not none and domain.days_until_expiry <= 7 %}text-danger fw-bold{% elif domain.days_until_expiry is not none and domain.days_until_expiry <= 30 %}text-warning{% endif %}">
+                {{ domain.expires_at | format_date }}
+                <div class="text-muted small">{{ domain.expires_at | days_countdown }}</div>
+              </div>
+              {% else %}
+              <span class="text-muted">—</span>
+              {% endif %}
+            </td>
+            <td class="text-muted small">
+              {{ domain.last_checked_at | time_ago if domain.last_checked_at else "Never" }}
+            </td>
+            <td>
+              <span class="badge domani-watch-badge domani-watch-{{ domain.watch_type }}">
+                {% if domain.watch_type == 'own' %}<i class="fa-solid fa-shield me-1"></i>Own{% else %}<i class="fa-solid fa-crosshairs me-1"></i>Snag{% endif %}
+              </span>
+            </td>
+            <td class="text-end">
+              <div class="d-flex align-items-center justify-content-end gap-1">
+                <a href="/domains/{{ domain.id }}" class="btn btn-sm btn-outline-secondary domani-btn-icon" title="View details">
+                  <i class="fa-solid fa-eye"></i>
+                </a>
+                <form method="post" action="/domains/{{ domain.id }}/refresh" class="d-inline">
+                  <button type="submit" class="btn btn-sm btn-outline-primary domani-btn-icon" title="Refresh WHOIS">
+                    <i class="fa-solid fa-rotate"></i>
+                  </button>
+                </form>
+                <form method="post" action="/domains/{{ domain.id }}/delete" class="d-inline"
+                      onsubmit="return confirm('Remove {{ domain.name }} from tracking?')">
+                  <button type="submit" class="btn btn-sm btn-outline-danger domani-btn-icon" title="Remove">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <!-- Empty state -->
+    <div class="domani-empty-state text-center py-5">
+      <div class="domani-empty-icon mb-3">
+        <i class="fa-solid fa-globe-americas"></i>
+      </div>
+      <h3 class="h5 fw-semibold mb-2">No domains tracked yet</h3>
+      <p class="text-muted mb-4">Start by adding a domain to monitor its expiration status.</p>
+      <a href="/domains/add" class="btn btn-primary">
+        <i class="fa-solid fa-plus me-2"></i>Add Your First Domain
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Live search + filter
+const searchInput = document.getElementById('domainSearch');
+const statusFilter = document.getElementById('statusFilter');
+const rows = document.querySelectorAll('.domani-domain-row');
+
+function filterTable() {
+  const search = searchInput?.value.toLowerCase() || '';
+  const status = statusFilter?.value || '';
+  rows.forEach(row => {
+    const name = row.dataset.name?.toLowerCase() || '';
+    const rowStatus = row.dataset.status || '';
+    const matchSearch = !search || name.includes(search);
+    const matchStatus = !status || rowStatus === status;
+    row.style.display = (matchSearch && matchStatus) ? '' : 'none';
+  });
+}
+
+searchInput?.addEventListener('input', filterTable);
+statusFilter?.addEventListener('change', filterTable);
+</script>
+{% endblock %}

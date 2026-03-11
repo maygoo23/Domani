@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+
+    <div class="mb-4">
+      <h1 class="h3 mb-0 fw-bold">Settings</h1>
+      <p class="text-muted small mb-0">Configure email notifications and global preferences</p>
+    </div>
+
+    <!-- SMTP Configuration -->
+    <div class="card domani-card mb-4">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-envelope me-2 text-primary"></i>Email (SMTP) Configuration</h2>
+      </div>
+      <div class="card-body p-4">
+        <form method="post" action="/settings">
+          <div class="row g-3">
+            <div class="col-12 col-md-8">
+              <label for="smtp_host" class="form-label fw-semibold small">SMTP Host</label>
+              <input type="text" class="form-control domani-input" id="smtp_host" name="smtp_host"
+                     value="{{ settings.get('smtp_host', '') }}"
+                     placeholder="smtp.gmail.com" />
+            </div>
+            <div class="col-12 col-md-4">
+              <label for="smtp_port" class="form-label fw-semibold small">Port</label>
+              <input type="number" class="form-control domani-input" id="smtp_port" name="smtp_port"
+                     value="{{ settings.get('smtp_port', '587') }}"
+                     placeholder="587" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="smtp_username" class="form-label fw-semibold small">Username</label>
+              <input type="text" class="form-control domani-input" id="smtp_username" name="smtp_username"
+                     value="{{ settings.get('smtp_username', '') }}"
+                     placeholder="user@example.com"
+                     autocomplete="off" />
+            </div>
+            <div class="col-12 col-md-6">
+              <label for="smtp_password" class="form-label fw-semibold small">Password</label>
+              <div class="input-group">
+                <input type="password" class="form-control domani-input" id="smtp_password" name="smtp_password"
+                       placeholder="{% if settings.get('smtp_password') %}••••••••{% else %}Enter password{% endif %}"
+                       autocomplete="new-password" />
+                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+              {% if settings.get('smtp_password') %}
+              <div class="form-text text-muted">Password saved. Leave blank to keep current.</div>
+              {% endif %}
+            </div>
+            <div class="col-12 col-md-8">
+              <label for="smtp_from" class="form-label fw-semibold small">From Address</label>
+              <input type="email" class="form-control domani-input" id="smtp_from" name="smtp_from"
+                     value="{{ settings.get('smtp_from', '') }}"
+                     placeholder="domani@yourdomain.com" />
+            </div>
+            <div class="col-12 col-md-4">
+              <label class="form-label fw-semibold small">TLS / STARTTLS</label>
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="smtp_tls" name="smtp_tls" value="true"
+                       {% if settings.get('smtp_tls', 'true') in ('true', '1', 'yes') %}checked{% endif %} />
+                <label class="form-check-label" for="smtp_tls">Use STARTTLS</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="d-flex gap-2 justify-content-end mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-floppy-disk me-2"></i>Save Settings
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Test Email -->
+    <div class="card domani-card mb-4">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-paper-plane me-2 text-primary"></i>Test Email</h2>
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small mb-3">Send a test email to verify your SMTP configuration is working.</p>
+        <form method="post" action="/settings/test-email" class="d-flex gap-2">
+          <input type="email" class="form-control domani-input" name="test_recipient"
+                 placeholder="recipient@example.com" required />
+          <button type="submit" class="btn btn-outline-primary text-nowrap">
+            <i class="fa-solid fa-paper-plane me-2"></i>Send Test
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Webhook info -->
+    <div class="card domani-card">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-link me-2 text-primary"></i>Webhook Information</h2>
+      </div>
+      <div class="card-body p-4">
+        <p class="text-muted small mb-3">
+          Domani can send webhook POST requests when domain status changes. Configure webhook alerts on each domain's detail page.
+        </p>
+        <p class="text-muted small mb-2 fw-semibold">Payload example:</p>
+        <pre class="domani-code-block"><code>{
+  "domain": "example.com",
+  "old_status": "active",
+  "new_status": "pending_delete",
+  "expires_at": "2024-03-15T00:00:00+00:00",
+  "days_until_expiry": -5,
+  "registrar": "Namecheap Inc.",
+  "timestamp": "2024-03-10T12:34:56+00:00"
+}</code></pre>
+        <p class="text-muted small mt-3 mb-0">
+          <i class="fa-solid fa-shield-halved me-1"></i>
+          Requests include an <code>X-Domani-Signature</code> header (HMAC-SHA256) when a webhook secret is configured.
+        </p>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePassword(btn) {
+  const input = btn.previousElementSibling;
+  const icon = btn.querySelector('i');
+  if (input.type === 'password') {
+    input.type = 'text';
+    icon.classList.replace('fa-eye', 'fa-eye-slash');
+  } else {
+    input.type = 'password';
+    icon.classList.replace('fa-eye-slash', 'fa-eye');
+  }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,560 @@
+/* ================================================================
+   Domani — Custom Styles
+   GitHub dark theme palette
+   ================================================================ */
+
+:root {
+  --domani-bg: #0d1117;
+  --domani-surface: #161b22;
+  --domani-surface-2: #1c2128;
+  --domani-border: #30363d;
+  --domani-border-subtle: #21262d;
+  --domani-text: #e6edf3;
+  --domani-text-muted: #8b949e;
+  --domani-accent: #58a6ff;
+  --domani-accent-hover: #79c0ff;
+  --domani-success: #3fb950;
+  --domani-warning: #d29922;
+  --domani-danger: #f85149;
+  --domani-purple: #bc8cff;
+  --domani-navbar-height: 60px;
+}
+
+/* ── Body / Layout ─────────────────────────────────────────────── */
+
+body {
+  background-color: var(--domani-bg);
+  color: var(--domani-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+main {
+  flex: 1;
+}
+
+/* ── Navbar ─────────────────────────────────────────────────────── */
+
+.domani-navbar {
+  background-color: var(--domani-surface);
+  border-bottom: 1px solid var(--domani-border);
+  height: var(--domani-navbar-height);
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  backdrop-filter: blur(8px);
+}
+
+.domani-logo-icon {
+  color: var(--domani-accent);
+  font-size: 1.2rem;
+}
+
+.domani-logo-text {
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--domani-text);
+}
+
+.domani-version-badge {
+  background-color: var(--domani-border);
+  color: var(--domani-text-muted);
+  font-size: 0.6rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 999px;
+}
+
+.navbar-nav .nav-link {
+  color: var(--domani-text-muted) !important;
+  font-size: 0.875rem;
+  padding: 0.4rem 0.75rem !important;
+  border-radius: 6px;
+  transition: color 0.15s, background-color 0.15s;
+}
+
+.navbar-nav .nav-link:hover,
+.navbar-nav .nav-link.active {
+  color: var(--domani-text) !important;
+  background-color: var(--domani-border-subtle);
+}
+
+/* ── Footer ─────────────────────────────────────────────────────── */
+
+.domani-footer {
+  background-color: var(--domani-surface);
+  border-top: 1px solid var(--domani-border);
+  padding: 0.75rem 0;
+  margin-top: 2rem;
+}
+
+/* ── Cards ──────────────────────────────────────────────────────── */
+
+.domani-card {
+  background-color: var(--domani-surface);
+  border: 1px solid var(--domani-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.domani-card .card-header {
+  background-color: var(--domani-surface-2);
+  border-bottom: 1px solid var(--domani-border);
+}
+
+.domani-card .card-footer {
+  background-color: var(--domani-surface-2);
+  border-top: 1px solid var(--domani-border);
+}
+
+/* ── Stat Cards ─────────────────────────────────────────────────── */
+
+.domani-stat-card {
+  background-color: var(--domani-surface);
+  border: 1px solid var(--domani-border);
+  border-radius: 8px;
+  transition: border-color 0.2s;
+}
+
+.domani-stat-card:hover {
+  border-color: var(--domani-accent);
+}
+
+.domani-stat-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--domani-text-muted);
+  margin-bottom: 0.25rem;
+}
+
+.domani-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 0;
+  color: var(--domani-text);
+}
+
+.domani-stat-icon {
+  font-size: 2rem;
+  opacity: 0.3;
+}
+
+/* ── Table ──────────────────────────────────────────────────────── */
+
+.domani-table {
+  color: var(--domani-text);
+}
+
+.domani-table thead th {
+  background-color: var(--domani-surface-2);
+  border-bottom: 1px solid var(--domani-border);
+  color: var(--domani-text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+}
+
+.domani-table tbody td {
+  border-bottom: 1px solid var(--domani-border-subtle);
+  padding: 0.875rem 1rem;
+  vertical-align: middle;
+}
+
+.domani-table tbody tr:hover td {
+  background-color: var(--domani-border-subtle);
+}
+
+.domani-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* ── Status Badges ──────────────────────────────────────────────── */
+
+.domani-status-badge {
+  font-size: 0.72rem;
+  padding: 0.3em 0.65em;
+  border-radius: 999px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.domani-status-active { background-color: rgba(63, 185, 80, 0.15); color: #3fb950; border: 1px solid rgba(63, 185, 80, 0.3); }
+.domani-status-expiring_soon { background-color: rgba(210, 153, 34, 0.15); color: #d29922; border: 1px solid rgba(210, 153, 34, 0.3); }
+.domani-status-expiring_critical { background-color: rgba(248, 81, 73, 0.15); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.3); }
+.domani-status-expired { background-color: rgba(248, 81, 73, 0.2); color: #f85149; border: 1px solid rgba(248, 81, 73, 0.4); }
+.domani-status-redemption { background-color: rgba(188, 140, 255, 0.15); color: #bc8cff; border: 1px solid rgba(188, 140, 255, 0.3); }
+.domani-status-pending_delete {
+  background-color: rgba(248, 81, 73, 0.25);
+  color: #ff6b5b;
+  border: 1px solid rgba(248, 81, 73, 0.5);
+  animation: domani-pulse-border 1.5s ease-in-out infinite;
+}
+.domani-status-available { background-color: rgba(88, 166, 255, 0.15); color: #58a6ff; border: 1px solid rgba(88, 166, 255, 0.3); }
+.domani-status-error { background-color: rgba(139, 148, 158, 0.15); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.3); }
+.domani-status-unknown { background-color: rgba(139, 148, 158, 0.1); color: #8b949e; border: 1px solid rgba(139, 148, 158, 0.2); }
+
+/* ── Watch type badges ──────────────────────────────────────────── */
+
+.domani-watch-badge {
+  font-size: 0.68rem;
+  padding: 0.28em 0.6em;
+  border-radius: 999px;
+  font-weight: 600;
+}
+
+.domani-watch-snag { background-color: rgba(88, 166, 255, 0.1); color: var(--domani-accent); border: 1px solid rgba(88, 166, 255, 0.25); }
+.domani-watch-own { background-color: rgba(63, 185, 80, 0.1); color: var(--domani-success); border: 1px solid rgba(63, 185, 80, 0.25); }
+
+/* ── Tag badges ─────────────────────────────────────────────────── */
+
+.domani-tag {
+  background-color: var(--domani-border);
+  color: var(--domani-text-muted);
+  font-size: 0.65rem;
+  font-weight: 500;
+  border-radius: 3px;
+}
+
+/* ── Event type badges ──────────────────────────────────────────── */
+
+.domani-event-badge {
+  background-color: var(--domani-border);
+  color: var(--domani-text-muted);
+  font-size: 0.65rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* ── Domain links ───────────────────────────────────────────────── */
+
+.domani-domain-link {
+  color: var(--domani-text);
+  text-decoration: none;
+  font-size: 0.9rem;
+}
+
+.domani-domain-link:hover {
+  color: var(--domani-accent);
+  text-decoration: underline;
+}
+
+.domani-domain-title {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+  letter-spacing: -0.3px;
+}
+
+/* ── Favicon placeholder ────────────────────────────────────────── */
+
+.domani-domain-favicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  background-color: var(--domani-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Forms ──────────────────────────────────────────────────────── */
+
+.domani-input {
+  background-color: var(--domani-surface-2);
+  border: 1px solid var(--domani-border);
+  color: var(--domani-text);
+  border-radius: 6px;
+}
+
+.domani-input:focus {
+  background-color: var(--domani-surface-2);
+  border-color: var(--domani-accent);
+  color: var(--domani-text);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.domani-input::placeholder {
+  color: var(--domani-text-muted);
+  opacity: 0.7;
+}
+
+.domani-select {
+  background-color: var(--domani-surface-2);
+  border: 1px solid var(--domani-border);
+  color: var(--domani-text);
+  border-radius: 6px;
+}
+
+.domani-select:focus {
+  background-color: var(--domani-surface-2);
+  border-color: var(--domani-accent);
+  color: var(--domani-text);
+  box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.15);
+}
+
+.domani-search {
+  background-color: var(--domani-surface-2);
+  border: 1px solid var(--domani-border);
+  color: var(--domani-text);
+}
+
+.domani-input-prefix {
+  background-color: var(--domani-border);
+  border: 1px solid var(--domani-border);
+  border-right: none;
+}
+
+/* ── Radio card buttons ─────────────────────────────────────────── */
+
+.domani-radio-card {
+  background-color: var(--domani-surface-2);
+  border: 1px solid var(--domani-border);
+  color: var(--domani-text-muted);
+  border-radius: 8px;
+  text-align: center;
+  transition: all 0.15s;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+.domani-radio-card:hover {
+  border-color: var(--domani-accent);
+  color: var(--domani-text);
+}
+
+.btn-check:checked + .domani-radio-card {
+  border-color: var(--domani-accent);
+  background-color: rgba(88, 166, 255, 0.08);
+  color: var(--domani-text);
+}
+
+/* ── Checkbox labels ────────────────────────────────────────────── */
+
+.domani-checkbox-label {
+  font-size: 0.8rem;
+  color: var(--domani-text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.domani-checkbox-label input[type="checkbox"] {
+  accent-color: var(--domani-accent);
+}
+
+.domani-checkbox-label:hover {
+  color: var(--domani-text);
+}
+
+/* ── Alert flash messages ───────────────────────────────────────── */
+
+.domani-alert {
+  border-radius: 8px;
+  font-size: 0.875rem;
+  border-left-width: 3px;
+}
+
+/* ── Action buttons ─────────────────────────────────────────────── */
+
+.domani-btn-icon {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
+.btn-xs {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+/* ── Empty state ────────────────────────────────────────────────── */
+
+.domani-empty-state {
+  padding: 3rem;
+}
+
+.domani-empty-icon {
+  font-size: 4rem;
+  color: var(--domani-border);
+}
+
+/* ── Error pages ────────────────────────────────────────────────── */
+
+.domani-error-icon {
+  font-size: 5rem;
+  color: var(--domani-border);
+}
+
+/* ── Snagging panel ─────────────────────────────────────────────── */
+
+.domani-snag-panel {
+  background: linear-gradient(135deg, rgba(248, 81, 73, 0.08) 0%, rgba(188, 140, 255, 0.08) 100%);
+  border: 1px solid rgba(248, 81, 73, 0.3);
+  border-radius: 8px;
+}
+
+.domani-drop-countdown {
+  font-size: 1.1rem;
+}
+
+.domani-registrar-btn {
+  font-size: 0.78rem;
+  border-color: var(--domani-border);
+  color: var(--domani-text-muted);
+}
+
+.domani-registrar-btn:hover {
+  border-color: var(--domani-accent);
+  color: var(--domani-text);
+}
+
+/* ── Info list (domain detail) ──────────────────────────────────── */
+
+.domani-info-list {
+  margin-bottom: 0;
+}
+
+.domani-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--domani-border-subtle);
+}
+
+.domani-info-row:last-child {
+  border-bottom: none;
+}
+
+.domani-info-row dt {
+  font-size: 0.78rem;
+  color: var(--domani-text-muted);
+  font-weight: 400;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.domani-info-row dd {
+  margin-bottom: 0;
+  font-size: 0.875rem;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* ── Alert item ─────────────────────────────────────────────────── */
+
+.domani-alert-item {
+  background-color: transparent;
+  border-color: var(--domani-border-subtle) !important;
+}
+
+.domani-alert-item:hover {
+  background-color: var(--domani-border-subtle);
+}
+
+/* ── Event log ──────────────────────────────────────────────────── */
+
+.domani-event-log {
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.domani-event-item {
+  transition: background-color 0.1s;
+}
+
+.domani-event-item:hover {
+  background-color: var(--domani-border-subtle);
+}
+
+.domani-event-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background-color: var(--domani-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
+/* ── Code block ─────────────────────────────────────────────────── */
+
+.domani-code-block {
+  background-color: var(--domani-surface-2);
+  border: 1px solid var(--domani-border);
+  border-radius: 6px;
+  padding: 1rem;
+  font-size: 0.8rem;
+  color: var(--domani-text-muted);
+  overflow-x: auto;
+  margin-bottom: 0;
+}
+
+/* ── Pulse animations ───────────────────────────────────────────── */
+
+@keyframes domani-pulse-border {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(248, 81, 73, 0); }
+  50% { box-shadow: 0 0 0 3px rgba(248, 81, 73, 0.3); }
+}
+
+@keyframes domani-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.domani-pulse {
+  animation: domani-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--domani-surface);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--domani-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--domani-text-muted);
+}
+
+/* ── Responsive adjustments ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .domani-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .domani-stat-icon {
+    font-size: 1.5rem;
+  }
+
+  .domani-table td,
+  .domani-table th {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}

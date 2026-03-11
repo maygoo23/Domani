@@ -1,0 +1,27 @@
+services:
+  domani:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: domani:latest
+    container_name: domani
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - domani_data:/data
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=sqlite:////data/domani.db
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  domani_data:
+    driver: local

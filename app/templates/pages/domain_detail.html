@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}{{ domain.name }}{% endblock %}
+
+{% block content %}
+{% set label, color = domain.status_label %}
+
+<!-- Header -->
+<div class="d-flex align-items-start justify-content-between mb-4 gap-3 flex-wrap">
+  <div class="d-flex align-items-center gap-3">
+    <a href="/" class="btn btn-sm btn-outline-secondary">
+      <i class="fa-solid fa-arrow-left me-1"></i>Back
+    </a>
+    <div>
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <h1 class="h3 mb-0 fw-bold domani-domain-title">{{ domain.name }}</h1>
+        <span class="badge domani-status-badge domani-status-{{ domain.status }} fs-6">{{ label }}</span>
+        <span class="badge domani-watch-badge domani-watch-{{ domain.watch_type }}">
+          {% if domain.watch_type == 'own' %}<i class="fa-solid fa-shield me-1"></i>Protect{% else %}<i class="fa-solid fa-crosshairs me-1"></i>Snag{% endif %}
+        </span>
+      </div>
+      {% if domain.registrar %}
+      <p class="text-muted small mb-0 mt-1">Registrar: {{ domain.registrar }}</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="d-flex gap-2">
+    <a href="/domains/{{ domain.id }}/edit" class="btn btn-outline-secondary btn-sm">
+      <i class="fa-solid fa-pen me-1"></i>Edit
+    </a>
+    <form method="post" action="/domains/{{ domain.id }}/refresh" class="d-inline">
+      <button type="submit" class="btn btn-outline-primary btn-sm">
+        <i class="fa-solid fa-rotate me-1"></i>Refresh WHOIS
+      </button>
+    </form>
+    <form method="post" action="/domains/{{ domain.id }}/delete"
+          onsubmit="return confirm('Remove {{ domain.name }} from tracking?')">
+      <button type="submit" class="btn btn-outline-danger btn-sm">
+        <i class="fa-solid fa-trash me-1"></i>Remove
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- Snagging panel (critical states) -->
+{% if show_snagging %}
+<div class="card domani-snag-panel mb-4">
+  <div class="card-body">
+    <div class="d-flex align-items-center gap-2 mb-3">
+      <i class="fa-solid fa-bolt text-warning fa-lg"></i>
+      <h2 class="h5 mb-0 fw-bold">
+        {% if domain.status == 'available' %}
+        🎯 Domain is AVAILABLE — Register it now!
+        {% elif domain.status == 'pending_delete' %}
+        ⚡ Dropping Soon — Set up a backorder!
+        {% elif domain.status == 'redemption' %}
+        ⏳ In Redemption Period — Act soon
+        {% else %}
+        🎯 Snagging Opportunity
+        {% endif %}
+      </h2>
+    </div>
+    {% if domain.expires_at %}
+    <div class="domani-drop-countdown mb-3">
+      <i class="fa-solid fa-clock me-1 text-warning"></i>
+      <strong>{{ domain.expires_at | days_countdown }}</strong>
+      <span class="text-muted ms-2">({{ domain.expires_at | format_date("%Y-%m-%d %H:%M") }} UTC)</span>
+    </div>
+    {% endif %}
+    {% if domain.status == 'pending_delete' %}
+    <div class="alert alert-warning py-2 mb-3">
+      <i class="fa-solid fa-circle-info me-2"></i>
+      <strong>ICANN Pending Delete</strong> typically lasts 1–5 days before the domain is released.
+      Exact drop time varies by registry. A <strong>backorder service</strong> gives you the best chance.
+    </div>
+    {% endif %}
+    <div class="row g-2">
+      {% for link in snagging_links %}
+      <div class="col-6 col-md-4 col-lg-2">
+        <a href="{{ link.url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm w-100 domani-registrar-btn">
+          {{ link.icon }} {{ link.name }}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<div class="row g-4">
+
+  <!-- Left column: WHOIS info + alerts -->
+  <div class="col-12 col-lg-5">
+
+    <!-- WHOIS Info -->
+    <div class="card domani-card mb-4">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-circle-info me-2 text-primary"></i>WHOIS Information</h2>
+      </div>
+      <div class="card-body">
+        <dl class="domani-info-list">
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-calendar-plus me-1 text-muted"></i>Registered</dt>
+            <dd>{{ domain.registered_at | format_date if domain.registered_at else "—" }}</dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-calendar-xmark me-1 text-muted"></i>Expires</dt>
+            <dd class="{% if domain.days_until_expiry is not none and domain.days_until_expiry <= 7 %}text-danger fw-bold{% elif domain.days_until_expiry is not none and domain.days_until_expiry <= 30 %}text-warning{% endif %}">
+              {% if domain.expires_at %}
+                {{ domain.expires_at | format_date }} <span class="text-muted small">({{ domain.expires_at | days_countdown }})</span>
+              {% else %}—{% endif %}
+            </dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-pen-to-square me-1 text-muted"></i>Updated</dt>
+            <dd>{{ domain.updated_at | format_date if domain.updated_at else "—" }}</dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-building me-1 text-muted"></i>Registrar</dt>
+            <dd>{{ domain.registrar or "—" }}</dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-user me-1 text-muted"></i>Registrant</dt>
+            <dd>{{ domain.registrant or "—" }}</dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-server me-1 text-muted"></i>Check Interval</dt>
+            <dd>Every {{ domain.check_interval_hours }}h</dd>
+          </div>
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-rotate me-1 text-muted"></i>Last Checked</dt>
+            <dd>{{ domain.last_checked_at | time_ago if domain.last_checked_at else "Never" }}</dd>
+          </div>
+          {% if domain.last_check_error %}
+          <div class="domani-info-row">
+            <dt><i class="fa-solid fa-triangle-exclamation me-1 text-danger"></i>Last Error</dt>
+            <dd class="text-danger small">{{ domain.last_check_error }}</dd>
+          </div>
+          {% endif %}
+        </dl>
+        {% if domain.notes %}
+        <div class="mt-3 pt-3 border-top domani-notes">
+          <p class="text-muted small mb-1"><i class="fa-solid fa-note-sticky me-1"></i>Notes</p>
+          <p class="mb-0 small">{{ domain.notes }}</p>
+        </div>
+        {% endif %}
+        {% if domain.tag_list %}
+        <div class="mt-3 pt-3 border-top">
+          {% for tag in domain.tag_list %}
+          <span class="badge domani-tag me-1">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Alert Configurations -->
+    <div class="card domani-card">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-bell me-2 text-primary"></i>Alert Configurations</h2>
+      </div>
+      <div class="card-body p-0">
+        {% if domain.alert_configs %}
+        <div class="list-group list-group-flush">
+          {% for alert in domain.alert_configs %}
+          <div class="list-group-item domani-alert-item px-4 py-3">
+            <div class="d-flex align-items-start justify-content-between gap-2">
+              <div class="flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge {% if alert.method == 'email' %}bg-info{% else %}bg-purple{% endif %}">
+                    <i class="fa-solid {% if alert.method == 'email' %}fa-envelope{% else %}fa-link{% endif %} me-1"></i>
+                    {{ alert.method }}
+                  </span>
+                  {% if not alert.enabled %}
+                  <span class="badge bg-secondary">Disabled</span>
+                  {% endif %}
+                </div>
+                <div class="text-muted small text-truncate" style="max-width:220px;">{{ alert.target }}</div>
+                <div class="mt-1 d-flex flex-wrap gap-1">
+                  {% for event in alert.event_type_list %}
+                  <span class="badge domani-event-badge">{{ event.replace('_', ' ') }}</span>
+                  {% endfor %}
+                </div>
+                {% if alert.last_triggered_at %}
+                <div class="text-muted" style="font-size:0.7rem; margin-top:4px;">
+                  Last triggered: {{ alert.last_triggered_at | time_ago }}
+                </div>
+                {% endif %}
+              </div>
+              <div class="d-flex flex-column gap-1">
+                <form method="post" action="/domains/{{ domain.id }}/alerts/{{ alert.id }}/test">
+                  <button type="submit" class="btn btn-xs btn-outline-secondary" title="Send test">
+                    <i class="fa-solid fa-paper-plane"></i>
+                  </button>
+                </form>
+                <form method="post" action="/domains/{{ domain.id }}/alerts/{{ alert.id }}/toggle">
+                  <button type="submit" class="btn btn-xs {% if alert.enabled %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{{ 'Disable' if alert.enabled else 'Enable' }}">
+                    <i class="fa-solid {% if alert.enabled %}fa-pause{% else %}fa-play{% endif %}"></i>
+                  </button>
+                </form>
+                <form method="post" action="/domains/{{ domain.id }}/alerts/{{ alert.id }}/delete"
+                      onsubmit="return confirm('Remove this alert?')">
+                  <button type="submit" class="btn btn-xs btn-outline-danger" title="Remove">
+                    <i class="fa-solid fa-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4 text-muted">
+          <i class="fa-solid fa-bell-slash fa-2x mb-2 opacity-50"></i>
+          <p class="small mb-0">No alerts configured</p>
+        </div>
+        {% endif %}
+      </div>
+      <!-- Add alert form -->
+      <div class="card-footer py-3 px-4">
+        <p class="text-muted small fw-semibold mb-2"><i class="fa-solid fa-plus me-1"></i>Add Alert</p>
+        <form method="post" action="/domains/{{ domain.id }}/alerts">
+          <div class="row g-2">
+            <div class="col-12 col-sm-5">
+              <select name="method" class="form-select form-select-sm domani-select" id="alertMethod" onchange="updateAlertTargetLabel(this.value)">
+                <option value="email">Email</option>
+                <option value="webhook">Webhook URL</option>
+              </select>
+            </div>
+            <div class="col-12 col-sm-7">
+              <input type="text" name="target" class="form-control form-control-sm domani-input"
+                     id="alertTarget" placeholder="email@example.com" required />
+            </div>
+            <div class="col-12">
+              <div class="d-flex flex-wrap gap-2 py-1">
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="expiring_soon" checked class="me-1"> Expiring Soon
+                </label>
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="expiring_critical" checked class="me-1"> Critical
+                </label>
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="expired" class="me-1"> Expired
+                </label>
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="redemption" class="me-1"> Redemption
+                </label>
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="pending_delete" checked class="me-1"> Pending Delete
+                </label>
+                <label class="domani-checkbox-label">
+                  <input type="checkbox" name="event_types" value="available" checked class="me-1"> Available
+                </label>
+              </div>
+            </div>
+            <div class="col-12 d-flex justify-content-end">
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-plus me-1"></i>Add Alert
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Right column: Event log -->
+  <div class="col-12 col-lg-7">
+    <div class="card domani-card">
+      <div class="card-header py-3">
+        <h2 class="h6 mb-0 fw-semibold"><i class="fa-solid fa-timeline me-2 text-primary"></i>Event Log</h2>
+      </div>
+      <div class="card-body p-0">
+        {% if events %}
+        <div class="domani-event-log">
+          {% for event in events %}
+          {% set icon_class, icon_color = event.icon %}
+          <div class="domani-event-item px-4 py-3 {% if not loop.last %}border-bottom{% endif %}">
+            <div class="d-flex align-items-start gap-3">
+              <div class="domani-event-icon {{ icon_color }}">
+                <i class="fa-solid {{ icon_class }}"></i>
+              </div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                  <span class="small fw-semibold">{{ event.event_type.replace('_', ' ').title() }}</span>
+                  <span class="text-muted" style="font-size:0.72rem; white-space:nowrap;">
+                    {{ event.created_at | format_date("%Y-%m-%d %H:%M") }} UTC
+                  </span>
+                </div>
+                {% if event.old_status and event.new_status %}
+                <div class="my-1">
+                  <span class="badge domani-status-badge domani-status-{{ event.old_status }}" style="font-size:0.65rem;">{{ event.old_status.replace('_',' ') }}</span>
+                  <i class="fa-solid fa-arrow-right mx-1 text-muted" style="font-size:0.65rem;"></i>
+                  <span class="badge domani-status-badge domani-status-{{ event.new_status }}" style="font-size:0.65rem;">{{ event.new_status.replace('_',' ') }}</span>
+                </div>
+                {% endif %}
+                {% if event.message %}
+                <p class="text-muted small mb-0 mt-1">{{ event.message }}</p>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="fa-solid fa-timeline fa-2x mb-2 opacity-50"></i>
+          <p class="small mb-0">No events yet — WHOIS check in progress</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function updateAlertTargetLabel(method) {
+  const input = document.getElementById('alertTarget');
+  if (method === 'email') {
+    input.placeholder = 'alert@example.com';
+    input.type = 'email';
+  } else {
+    input.placeholder = 'https://hooks.example.com/webhook';
+    input.type = 'url';
+  }
+}
+</script>
+{% endblock %}

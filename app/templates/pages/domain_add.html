@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Add Domain{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7">
+
+    <div class="d-flex align-items-center gap-3 mb-4">
+      <a href="/" class="btn btn-sm btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left me-1"></i>Back
+      </a>
+      <div>
+        <h1 class="h3 mb-0 fw-bold">Add Domain</h1>
+        <p class="text-muted small mb-0">Track a domain for expiration monitoring</p>
+      </div>
+    </div>
+
+    <div class="card domani-card">
+      <div class="card-body p-4">
+        <form method="post" action="/domains" id="addDomainForm">
+
+          <!-- Domain name -->
+          <div class="mb-4">
+            <label for="name" class="form-label fw-semibold">
+              <i class="fa-solid fa-globe me-1 text-primary"></i>Domain Name
+              <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text domani-input-prefix">
+                <i class="fa-solid fa-at text-muted"></i>
+              </span>
+              <input type="text" class="form-control domani-input" id="name" name="name"
+                     placeholder="example.com"
+                     pattern="^(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$"
+                     required autofocus />
+            </div>
+            <div class="form-text text-muted">
+              Enter just the domain name — no https:// or trailing slashes needed.
+            </div>
+          </div>
+
+          <!-- Watch type -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              <i class="fa-solid fa-eye me-1 text-primary"></i>Watch Type
+            </label>
+            <div class="row g-3">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="watch_type" id="watchSnag" value="snag" checked />
+                <label class="btn domani-radio-card w-100" for="watchSnag">
+                  <div class="d-flex flex-column align-items-center py-2">
+                    <i class="fa-solid fa-crosshairs fa-2x mb-2 text-primary"></i>
+                    <strong>Snag It</strong>
+                    <small class="text-muted mt-1">Monitor a domain you want to register</small>
+                  </div>
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="watch_type" id="watchOwn" value="own" />
+                <label class="btn domani-radio-card w-100" for="watchOwn">
+                  <div class="d-flex flex-column align-items-center py-2">
+                    <i class="fa-solid fa-shield fa-2x mb-2 text-success"></i>
+                    <strong>Protect It</strong>
+                    <small class="text-muted mt-1">I own this domain — remind me to renew</small>
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Check interval -->
+          <div class="mb-4">
+            <label for="check_interval_hours" class="form-label fw-semibold">
+              <i class="fa-solid fa-rotate me-1 text-primary"></i>Check Interval
+            </label>
+            <select class="form-select domani-select" id="check_interval_hours" name="check_interval_hours">
+              <option value="1">Every hour</option>
+              <option value="3">Every 3 hours</option>
+              <option value="6" selected>Every 6 hours (recommended)</option>
+              <option value="12">Every 12 hours</option>
+              <option value="24">Daily</option>
+              <option value="48">Every 2 days</option>
+            </select>
+            <div class="form-text text-muted">
+              When a domain enters a critical phase (Redemption / Pending Delete), it automatically switches to every {{ "5" }} minutes.
+            </div>
+          </div>
+
+          <!-- Tags -->
+          <div class="mb-4">
+            <label for="tags" class="form-label fw-semibold">
+              <i class="fa-solid fa-tags me-1 text-primary"></i>Tags
+              <span class="text-muted fw-normal">(optional)</span>
+            </label>
+            <input type="text" class="form-control domani-input" id="tags" name="tags"
+                   placeholder="client-a, tech, priority" />
+            <div class="form-text text-muted">Comma-separated tags for filtering.</div>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-4">
+            <label for="notes" class="form-label fw-semibold">
+              <i class="fa-solid fa-note-sticky me-1 text-primary"></i>Notes
+              <span class="text-muted fw-normal">(optional)</span>
+            </label>
+            <textarea class="form-control domani-input" id="notes" name="notes" rows="2"
+                      placeholder="Any notes about this domain…"></textarea>
+          </div>
+
+          <!-- Submit -->
+          <div class="d-flex gap-2 justify-content-end">
+            <a href="/" class="btn btn-outline-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">
+              <i class="fa-solid fa-plus me-2"></i>Add Domain
+            </button>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
