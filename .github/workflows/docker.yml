@@ -14,64 +14,90 @@ env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
-# Grant GITHUB_TOKEN packages:write at workflow level so GHCR allows
-# creating new packages on first push to a personal account.
 permissions:
   contents: read
   packages: write
 
 jobs:
+  # Detect which files changed so downstream jobs can decide whether to run.
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      container: ${{ steps.filter.outputs.container }}
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            # Anything that changes what ends up inside the Docker image
+            container:
+              - 'Dockerfile'
+              - 'docker/**'
+              - 'requirements.txt'
+              - 'app/**'
+              - 'static/**'
+            # Anything worth linting and testing
+            code:
+              - 'app/**'
+              - 'tests/**'
+              - 'requirements*.txt'
+              - 'pyproject.toml'
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.code == 'true' || startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
-
-      - name: Install dev dependencies
-        run: pip install ruff
-
-      - name: Run Ruff linter
-        run: ruff check app/
+      - run: pip install ruff
+      - run: ruff check app/
 
   test:
     name: Test
     runs-on: ubuntu-latest
-    needs: lint
+    needs: [changes, lint]
+    if: needs.changes.outputs.code == 'true' || startsWith(github.ref, 'refs/tags/')
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: 'pip'
-
-      - name: Install dependencies
-        run: pip install -r requirements-dev.txt
-
-      - name: Run tests
-        run: pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
+      - run: pip install -r requirements-dev.txt
+      - run: pytest tests/ -v --tb=short --cov=app --cov-report=term-missing
         env:
           DATABASE_URL: sqlite:///./test.db
           SECRET_KEY: test-secret-key-for-ci
 
   build-and-push:
-    name: Build & Push
+    name: Build & Push (${{ matrix.platform }})
     runs-on: ubuntu-latest
-    needs: test
-    permissions:
-      contents: read
-      packages: write
+    # Only rebuild when container-relevant files change, or on a version tag.
+    # Skips rebuilding for README, workflow, or other non-image changes.
+    needs: [changes, test]
+    if: |
+      (needs.changes.outputs.container == 'true' || startsWith(github.ref, 'refs/tags/')) &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped')
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - linux/amd64
+          - linux/arm64
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -96,13 +122,83 @@ jobs:
             type=sha,prefix=sha-
             type=raw,value=latest,enable={{is_default_branch}}
 
-      - name: Build and push Docker image
+      # Sanitize platform name for use as a cache key (linux/amd64 → linux-amd64)
+      - name: Prepare platform slug
+        id: slug
+        run: echo "slug=$(echo '${{ matrix.platform }}' | tr '/' '-')" >> $GITHUB_OUTPUT
+
+      - name: Build and push by digest
+        id: build
         uses: docker/build-push-action@v5
         with:
           context: .
+          platforms: ${{ matrix.platform }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          platforms: linux/amd64,linux/arm64
+          outputs: type=image,name=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true,push=${{ github.event_name != 'pull_request' }}
+          cache-from: type=gha,scope=${{ steps.slug.outputs.slug }}
+          cache-to: type=gha,mode=max,scope=${{ steps.slug.outputs.slug }}
+
+      - name: Export digest
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir -p /tmp/digests
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: digests-${{ steps.slug.outputs.slug }}
+          path: /tmp/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Merge the per-arch digests into a single multi-arch manifest and apply all tags.
+  merge-manifests:
+    name: Merge Manifests & Tag
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Download amd64 digest
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-linux-amd64
+          path: /tmp/digests
+
+      - name: Download arm64 digest
+        uses: actions/download-artifact@v4
+        with:
+          name: digests-linux-arm64
+          path: /tmp/digests
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.CR_PAT }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Create and push multi-arch manifest
+        working-directory: /tmp/digests
+        run: |
+          docker buildx imagetools create \
+            $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf '${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}@sha256:%s ' *)
