@@ -1,27 +1,26 @@
 """APScheduler background task management."""
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from apscheduler.executors.asyncio import AsyncIOExecutor
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.orm import Session
 
 from ..config import settings
 from ..database import SessionLocal, engine
-from ..models.domain import Domain, DomainStatus, FAST_POLL_STATES
+from ..models.domain import FAST_POLL_STATES, Domain, DomainStatus
 from ..models.event import DomainEvent, EventType
-from ..services.whois_service import lookup_domain
-from ..services.domain_lifecycle import determine_status, is_alert_worthy_transition
 from ..services.alert_service import dispatch_alerts
+from ..services.domain_lifecycle import determine_status, is_alert_worthy_transition
+from ..services.whois_service import lookup_domain
 
 logger = logging.getLogger(__name__)
 
-_scheduler: Optional[AsyncIOScheduler] = None
+_scheduler: AsyncIOScheduler | None = None
 
 
-def get_scheduler() -> Optional[AsyncIOScheduler]:
+def get_scheduler() -> AsyncIOScheduler | None:
     return _scheduler
 
 
@@ -65,7 +64,7 @@ async def check_domain_job(domain_id: int) -> None:
         new_status = determine_status(result, domain.name)
 
         # Update domain record
-        domain.last_checked_at = datetime.now(timezone.utc)
+        domain.last_checked_at = datetime.now(UTC)
         domain.status = new_status.value
 
         if result.error:
@@ -144,7 +143,7 @@ def schedule_domain(domain_id: int, interval_hours: int, run_now: bool = False) 
             trigger="interval",
             id=job_id,
             kwargs=kwargs,
-            next_run_time=datetime.now(timezone.utc) if run_now else None,
+            next_run_time=datetime.now(UTC) if run_now else None,
             **trigger_kwargs,
         )
 
@@ -153,7 +152,7 @@ def reschedule_on_transition(domain_id: int, new_status: DomainStatus) -> None:
     """Adjust polling frequency based on domain's lifecycle state."""
     if new_status in FAST_POLL_STATES:
         interval_minutes = settings.fast_poll_interval_minutes
-        logger.info("Domain %d entering fast-poll mode (%dm intervals)", domain_id, interval_minutes)
+        logger.info("Domain %d entering fast-poll mode (%dm intervals)", domain_id, interval_minutes)  # noqa: E501
         if _scheduler:
             job_id = f"domain_{domain_id}"
             if _scheduler.get_job(job_id):

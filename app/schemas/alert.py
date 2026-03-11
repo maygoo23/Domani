@@ -1,6 +1,5 @@
-from typing import Optional
-from pydantic import BaseModel, field_validator, EmailStr
 
+from pydantic import BaseModel, field_validator
 
 VALID_METHODS = {"email", "webhook"}
 VALID_EVENT_TYPES = {
@@ -13,7 +12,7 @@ class AlertConfigCreate(BaseModel):
     method: str
     target: str
     event_types: str = "expiring_soon,expiring_critical,pending_delete,available"
-    webhook_secret: Optional[str] = None
+    webhook_secret: str | None = None
     enabled: bool = True
 
     @field_validator("method")

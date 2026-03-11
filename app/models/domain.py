@@ -1,7 +1,9 @@
 import enum
-from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Text, Float
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from ..database import Base
 
 
@@ -59,10 +61,10 @@ class Domain(Base):
     tags = Column(String(500), nullable=True)
     watch_type = Column(String(16), default="snag")  # "own" or "snag"
 
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     # Relationships
-    alert_configs = relationship("AlertConfig", back_populates="domain", cascade="all, delete-orphan")
+    alert_configs = relationship("AlertConfig", back_populates="domain", cascade="all, delete-orphan")  # noqa: E501
     events = relationship(
         "DomainEvent",
         back_populates="domain",
@@ -78,10 +80,10 @@ class Domain(Base):
     def days_until_expiry(self) -> int | None:
         if not self.expires_at:
             return None
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expires = self.expires_at
         if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
+            expires = expires.replace(tzinfo=UTC)
         delta = expires - now
         return delta.days
 

@@ -1,5 +1,7 @@
-from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, Text
+from datetime import UTC, datetime
+
+from sqlalchemy import Column, DateTime, String, Text
+
 from ..database import Base
 
 
@@ -8,4 +10,4 @@ class AppSetting(Base):
 
     key = Column(String(128), primary_key=True)
     value = Column(Text, nullable=True)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC))  # noqa: E501

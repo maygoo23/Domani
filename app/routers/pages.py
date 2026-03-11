@@ -1,6 +1,6 @@
 """HTML page routes."""
 import logging
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse
@@ -31,14 +31,14 @@ def flash(request: Request, message: str, category: str = "info") -> None:
 async def dashboard(request: Request, db: Session = Depends(get_db)):
     domains = db.query(Domain).order_by(Domain.expires_at.asc().nullslast()).all()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     def days_diff(domain):
         if not domain.expires_at:
             return None
         dt = domain.expires_at
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return (dt - now).days
 
     expiring_30 = sum(1 for d in domains if days_diff(d) is not None and 0 <= days_diff(d) <= 30)
@@ -108,7 +108,7 @@ async def domain_detail(request: Request, domain_id: int, db: Session = Depends(
             "snagging_links": snagging_links,
             "show_snagging": show_snagging,
             "flash_messages": get_flash(request),
-            "now": datetime.now(timezone.utc),
+            "now": datetime.now(UTC),
         },
     )
 
@@ -128,8 +128,8 @@ async def edit_domain_page(request: Request, domain_id: int, db: Session = Depen
 
 @router.get("/settings", response_class=HTMLResponse)
 async def settings_page(request: Request, db: Session = Depends(get_db)):
-    setting_keys = ["smtp_host", "smtp_port", "smtp_username", "smtp_password", "smtp_from", "smtp_tls"]
-    db_settings = {s.key: s.value for s in db.query(AppSetting).filter(AppSetting.key.in_(setting_keys)).all()}
+    setting_keys = ["smtp_host", "smtp_port", "smtp_username", "smtp_password", "smtp_from", "smtp_tls"]  # noqa: E501
+    db_settings = {s.key: s.value for s in db.query(AppSetting).filter(AppSetting.key.in_(setting_keys)).all()}  # noqa: E501
 
     return templates.TemplateResponse(
         request,

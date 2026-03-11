@@ -1,7 +1,9 @@
 import enum
-from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Boolean
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
+
 from ..database import Base
 
 
@@ -32,14 +34,14 @@ class DomainEvent(Base):
     __tablename__ = "domain_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    domain_id = Column(Integer, ForeignKey("domains.id", ondelete="CASCADE"), nullable=False, index=True)
+    domain_id = Column(Integer, ForeignKey("domains.id", ondelete="CASCADE"), nullable=False, index=True)  # noqa: E501
     event_type = Column(String(64), nullable=False)
     old_status = Column(String(32), nullable=True)
     new_status = Column(String(32), nullable=True)
     message = Column(Text, nullable=True)
     raw_whois = Column(Text, nullable=True)
     success = Column(Boolean, default=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True)
 
     domain = relationship("Domain", back_populates="events")
 

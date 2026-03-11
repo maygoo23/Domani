@@ -1,6 +1,5 @@
 """Domain lifecycle state machine logic."""
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 from ..config import settings
 from ..models.domain import DomainStatus
@@ -30,7 +29,7 @@ def determine_status(result: WhoisResult, domain_name: str) -> DomainStatus:
     if not result.is_registered:
         return DomainStatus.AVAILABLE
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Check EPP status codes first (most authoritative)
     status_lower = {s.lower() for s in result.status_codes}
@@ -46,7 +45,7 @@ def determine_status(result: WhoisResult, domain_name: str) -> DomainStatus:
     if result.expires_at:
         expires = result.expires_at
         if expires.tzinfo is None:
-            expires = expires.replace(tzinfo=timezone.utc)
+            expires = expires.replace(tzinfo=UTC)
 
         days_remaining = (expires - now).days
 
@@ -89,7 +88,7 @@ ALERT_WORTHY_TRANSITIONS: set[tuple[str, str]] = {
 EXPIRY_ALERT_STATUSES = {DomainStatus.EXPIRING_SOON, DomainStatus.EXPIRING_CRITICAL}
 
 
-def is_alert_worthy_transition(old_status: Optional[str], new_status: str) -> bool:
+def is_alert_worthy_transition(old_status: str | None, new_status: str) -> bool:
     """Return True if this status transition should trigger alerts."""
     if old_status is None:
         return False
@@ -104,10 +103,10 @@ def status_matches_event_type(status: str, event_types: list[str]) -> bool:
 def get_snagging_registrar_links(domain: str) -> list[dict[str, str]]:
     """Return direct registration/backorder links for popular registrars."""
     return [
-        {"name": "Namecheap", "url": f"https://www.namecheap.com/domains/registration/results/?domain={domain}", "icon": "🐦"},
+        {"name": "Namecheap", "url": f"https://www.namecheap.com/domains/registration/results/?domain={domain}", "icon": "🐦"},  # noqa: E501
         {"name": "Porkbun", "url": f"https://porkbun.com/checkout/search?q={domain}", "icon": "🐷"},
-        {"name": "Cloudflare", "url": f"https://www.cloudflare.com/products/registrar/", "icon": "🌩️"},
-        {"name": "GoDaddy", "url": f"https://www.godaddy.com/domainsearch/find?domainToCheck={domain}", "icon": "🐢"},
-        {"name": "Dynadot", "url": f"https://www.dynadot.com/domain/search.html?domain={domain}", "icon": "🔍"},
-        {"name": "SnapNames", "url": f"https://www.snapnames.com/showDomain.action?domain={domain}", "icon": "📸"},
+        {"name": "Cloudflare", "url": "https://www.cloudflare.com/products/registrar/", "icon": "🌩️"},  # noqa: E501
+        {"name": "GoDaddy", "url": f"https://www.godaddy.com/domainsearch/find?domainToCheck={domain}", "icon": "🐢"},  # noqa: E501
+        {"name": "Dynadot", "url": f"https://www.dynadot.com/domain/search.html?domain={domain}", "icon": "🔍"},  # noqa: E501
+        {"name": "SnapNames", "url": f"https://www.snapnames.com/showDomain.action?domain={domain}", "icon": "📸"},  # noqa: E501
     ]

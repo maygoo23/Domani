@@ -1,7 +1,8 @@
 """Alert configuration routes."""
 import logging
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
-from fastapi.responses import RedirectResponse, Response
+
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -51,7 +52,7 @@ async def add_alert(
 
 
 @router.post("/{domain_id}/alerts/{alert_id}/delete")
-async def delete_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):
+async def delete_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):  # noqa: E501
     alert = db.query(AlertConfig).filter(
         AlertConfig.id == alert_id,
         AlertConfig.domain_id == domain_id,
@@ -67,7 +68,7 @@ async def delete_alert(request: Request, domain_id: int, alert_id: int, db: Sess
 
 
 @router.post("/{domain_id}/alerts/{alert_id}/toggle")
-async def toggle_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):
+async def toggle_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):  # noqa: E501
     alert = db.query(AlertConfig).filter(
         AlertConfig.id == alert_id,
         AlertConfig.domain_id == domain_id,
@@ -84,9 +85,14 @@ async def toggle_alert(request: Request, domain_id: int, alert_id: int, db: Sess
 
 
 @router.post("/{domain_id}/alerts/{alert_id}/test")
-async def test_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):
+async def test_alert(request: Request, domain_id: int, alert_id: int, db: Session = Depends(get_db)):  # noqa: E501
     """Send a test alert."""
-    from ..services.alert_service import send_email_alert, send_webhook_alert, _get_smtp_settings, _build_alert_message
+    from ..services.alert_service import (
+        _build_alert_message,
+        _get_smtp_settings,
+        send_email_alert,
+        send_webhook_alert,
+    )
 
     domain = db.query(Domain).filter(Domain.id == domain_id).first()
     alert = db.query(AlertConfig).filter(
@@ -107,6 +113,6 @@ async def test_alert(request: Request, domain_id: int, alert_id: int, db: Sessio
     elif alert.method == "webhook":
         success = await send_webhook_alert(alert, domain, context)
 
-    msg = "Test alert sent successfully!" if success else "Test alert failed — check your configuration."
+    msg = "Test alert sent successfully!" if success else "Test alert failed — check your configuration."  # noqa: E501
     flash(request, msg, "success" if success else "danger")
     return RedirectResponse(f"/domains/{domain_id}", status_code=303)

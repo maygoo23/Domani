@@ -1,9 +1,10 @@
 """Global settings routes."""
 import logging
-from fastapi import APIRouter, Depends, Request, Form
+from datetime import UTC, datetime
+
+from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from datetime import datetime, timezone
 
 from ..database import get_db
 from ..models.settings import AppSetting
@@ -22,7 +23,7 @@ def upsert_setting(db: Session, key: str, value: str) -> None:
     setting = db.query(AppSetting).filter(AppSetting.key == key).first()
     if setting:
         setting.value = value
-        setting.updated_at = datetime.now(timezone.utc)
+        setting.updated_at = datetime.now(UTC)
     else:
         db.add(AppSetting(key=key, value=value))
 
@@ -58,9 +59,11 @@ async def test_email(
     test_recipient: str = Form(...),
     db: Session = Depends(get_db),
 ):
-    from ..services.alert_service import _get_smtp_settings
-    import aiosmtplib
     from email.mime.text import MIMEText
+
+    import aiosmtplib
+
+    from ..services.alert_service import _get_smtp_settings
 
     smtp = _get_smtp_settings(db)
     if not smtp["host"]:
@@ -68,7 +71,7 @@ async def test_email(
         return RedirectResponse("/settings", status_code=303)
 
     try:
-        msg = MIMEText("This is a test email from your Domani instance. Your email alerts are configured correctly!", "plain")
+        msg = MIMEText("This is a test email from your Domani instance. Your email alerts are configured correctly!", "plain")  # noqa: E501
         msg["Subject"] = "Domani — Test Email"
         msg["From"] = smtp["from_addr"]
         msg["To"] = test_recipient

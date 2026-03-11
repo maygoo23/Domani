@@ -1,5 +1,5 @@
-from .domain import Domain, DomainStatus
 from .alert import AlertConfig
+from .domain import Domain, DomainStatus
 from .event import DomainEvent, EventType
 from .settings import AppSetting
 

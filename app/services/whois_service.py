@@ -3,8 +3,7 @@ import asyncio
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
 import whois
 
@@ -20,22 +19,22 @@ _lookup_lock = asyncio.Lock()
 @dataclass
 class WhoisResult:
     domain: str
-    registrar: Optional[str] = None
-    registrant: Optional[str] = None
-    registered_at: Optional[datetime] = None
-    expires_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
+    registrar: str | None = None
+    registrant: str | None = None
+    registered_at: datetime | None = None
+    expires_at: datetime | None = None
+    updated_at: datetime | None = None
     name_servers: list[str] = field(default_factory=list)
     status_codes: list[str] = field(default_factory=list)
     raw: str = ""
-    error: Optional[str] = None
+    error: str | None = None
 
     @property
     def is_registered(self) -> bool:
         return self.expires_at is not None or bool(self.registrar)
 
 
-def _normalize_datetime(value) -> Optional[datetime]:
+def _normalize_datetime(value) -> datetime | None:
     """Normalize whois date values (may be list, datetime, or None)."""
     if value is None:
         return None
@@ -45,12 +44,12 @@ def _normalize_datetime(value) -> Optional[datetime]:
         return None
     if isinstance(value, datetime):
         if value.tzinfo is None:
-            return value.replace(tzinfo=timezone.utc)
+            return value.replace(tzinfo=UTC)
         return value
     return None
 
 
-def _normalize_string(value) -> Optional[str]:
+def _normalize_string(value) -> str | None:
     if value is None:
         return None
     if isinstance(value, list):
@@ -80,7 +79,7 @@ def _do_whois_lookup(domain: str) -> WhoisResult:
         result = WhoisResult(
             domain=domain,
             registrar=_normalize_string(w.registrar),
-            registrant=_normalize_string(getattr(w, "registrant_name", None) or getattr(w, "org", None)),
+            registrant=_normalize_string(getattr(w, "registrant_name", None) or getattr(w, "org", None)),  # noqa: E501
             registered_at=_normalize_datetime(w.creation_date),
             expires_at=_normalize_datetime(w.expiration_date),
             updated_at=_normalize_datetime(w.updated_date),
@@ -104,7 +103,7 @@ async def lookup_domain(domain: str) -> WhoisResult:
     """Async WHOIS lookup with rate limiting and retry."""
     global _last_lookup_time
 
-    last_result: Optional[WhoisResult] = None
+    last_result: WhoisResult | None = None
 
     for attempt in range(settings.whois_retry_count):
         async with _lookup_lock:
@@ -123,11 +122,11 @@ async def lookup_domain(domain: str) -> WhoisResult:
             if result.error is None:
                 return result
             last_result = result
-            logger.warning("WHOIS attempt %d/%d failed for %s: %s", attempt + 1, settings.whois_retry_count, domain, result.error)
+            logger.warning("WHOIS attempt %d/%d failed for %s: %s", attempt + 1, settings.whois_retry_count, domain, result.error)  # noqa: E501
 
-        except asyncio.TimeoutError:
-            last_result = WhoisResult(domain=domain, error=f"Timeout after {settings.whois_timeout_seconds}s")
-            logger.warning("WHOIS timeout on attempt %d/%d for %s", attempt + 1, settings.whois_retry_count, domain)
+        except TimeoutError:
+            last_result = WhoisResult(domain=domain, error=f"Timeout after {settings.whois_timeout_seconds}s")  # noqa: E501
+            logger.warning("WHOIS timeout on attempt %d/%d for %s", attempt + 1, settings.whois_retry_count, domain)  # noqa: E501
 
         if attempt < settings.whois_retry_count - 1:
             backoff = 2 ** attempt

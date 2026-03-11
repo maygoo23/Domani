@@ -1,7 +1,7 @@
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, field_validator
 import re
+from datetime import datetime
+
+from pydantic import BaseModel, field_validator
 
 
 def validate_domain_name(v: str) -> str:
@@ -20,8 +20,8 @@ def validate_domain_name(v: str) -> str:
 class DomainCreate(BaseModel):
     name: str
     watch_type: str = "snag"
-    notes: Optional[str] = None
-    tags: Optional[str] = None
+    notes: str | None = None
+    tags: str | None = None
     check_interval_hours: int = 6
 
     @field_validator("name")
@@ -38,20 +38,20 @@ class DomainCreate(BaseModel):
 
 
 class DomainUpdate(BaseModel):
-    watch_type: Optional[str] = None
-    notes: Optional[str] = None
-    tags: Optional[str] = None
-    check_interval_hours: Optional[int] = None
+    watch_type: str | None = None
+    notes: str | None = None
+    tags: str | None = None
+    check_interval_hours: int | None = None
 
 
 class DomainResponse(BaseModel):
     id: int
     name: str
     status: str
-    registrar: Optional[str] = None
-    expires_at: Optional[datetime] = None
-    last_checked_at: Optional[datetime] = None
+    registrar: str | None = None
+    expires_at: datetime | None = None
+    last_checked_at: datetime | None = None
     watch_type: str
-    notes: Optional[str] = None
+    notes: str | None = None
 
     model_config = {"from_attributes": True}

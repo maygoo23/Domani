@@ -1,6 +1,8 @@
-from datetime import datetime, timezone
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, ForeignKey, Text
+from datetime import UTC, datetime
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from ..database import Base
 
 
@@ -12,7 +14,7 @@ class AlertConfig(Base):
 
     # What events trigger this alert
     # Comma-separated DomainStatus values, e.g. "expiring_soon,expiring_critical,pending_delete"
-    event_types = Column(String(500), nullable=False, default="expiring_soon,expiring_critical,pending_delete,available")
+    event_types = Column(String(500), nullable=False, default="expiring_soon,expiring_critical,pending_delete,available")  # noqa: E501
 
     # Delivery method
     method = Column(String(16), nullable=False)  # "email" or "webhook"
@@ -23,7 +25,7 @@ class AlertConfig(Base):
 
     enabled = Column(Boolean, default=True)
     last_triggered_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
 
     domain = relationship("Domain", back_populates="alert_configs")
 

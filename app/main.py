@@ -3,13 +3,12 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from .config import settings
 from .database import Base, engine
-from .routers import pages, domains, alerts
+from .routers import alerts, domains, pages
 from .routers.settings_router import router as settings_router
 from .services import scheduler_service
 from .templates_config import templates

@@ -3,13 +3,12 @@ import hashlib
 import hmac
 import json
 import logging
-from datetime import datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 import aiosmtplib
 import httpx
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from sqlalchemy.orm import Session
 
 from ..models.alert import AlertConfig
@@ -21,11 +20,11 @@ logger = logging.getLogger(__name__)
 
 def _get_smtp_settings(db: Session) -> dict:
     """Load SMTP settings from database or environment."""
-    from ..models.settings import AppSetting
     from ..config import settings as app_settings
+    from ..models.settings import AppSetting
 
     keys = ["smtp_host", "smtp_port", "smtp_username", "smtp_password", "smtp_from", "smtp_tls"]
-    db_settings = {s.key: s.value for s in db.query(AppSetting).filter(AppSetting.key.in_(keys)).all()}
+    db_settings = {s.key: s.value for s in db.query(AppSetting).filter(AppSetting.key.in_(keys)).all()}  # noqa: E501
 
     return {
         "host": db_settings.get("smtp_host") or app_settings.smtp_host,
@@ -33,14 +32,14 @@ def _get_smtp_settings(db: Session) -> dict:
         "username": db_settings.get("smtp_username") or app_settings.smtp_username,
         "password": db_settings.get("smtp_password") or app_settings.smtp_password,
         "from_addr": db_settings.get("smtp_from") or app_settings.smtp_from,
-        "use_tls": (db_settings.get("smtp_tls") or str(app_settings.smtp_tls)).lower() in ("true", "1", "yes"),
+        "use_tls": (db_settings.get("smtp_tls") or str(app_settings.smtp_tls)).lower() in ("true", "1", "yes"),  # noqa: E501
     }
 
 
-def _build_alert_message(domain: Domain, old_status: Optional[str], new_status: str) -> dict:
+def _build_alert_message(domain: Domain, old_status: str | None, new_status: str) -> dict:
     """Build alert context dict."""
     days = domain.days_until_expiry
-    expires_str = domain.expires_at.strftime("%Y-%m-%d %H:%M UTC") if domain.expires_at else "Unknown"
+    expires_str = domain.expires_at.strftime("%Y-%m-%d %H:%M UTC") if domain.expires_at else "Unknown"  # noqa: E501
 
     if new_status == "available":
         subject = f"🚨 DOMAIN AVAILABLE: {domain.name} is ready to register!"
@@ -85,7 +84,7 @@ def _build_alert_message(domain: Domain, old_status: Optional[str], new_status: 
         "expires_at": domain.expires_at.isoformat() if domain.expires_at else None,
         "days_until_expiry": days,
         "registrar": domain.registrar,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
 
 
@@ -145,7 +144,7 @@ async def send_webhook_alert(config: AlertConfig, domain: Domain, context: dict)
         async with httpx.AsyncClient(timeout=10.0) as client:
             response = await client.post(config.target, content=payload, headers=headers)
             success = response.is_success
-            logger.info("Webhook %s for %s: HTTP %s", config.target, domain.name, response.status_code)
+            logger.info("Webhook %s for %s: HTTP %s", config.target, domain.name, response.status_code)  # noqa: E501
             return success
 
     except Exception as e:
@@ -155,7 +154,7 @@ async def send_webhook_alert(config: AlertConfig, domain: Domain, context: dict)
 
 async def dispatch_alerts(
     domain: Domain,
-    old_status: Optional[str],
+    old_status: str | None,
     new_status: str,
     db: Session,
 ) -> None:
@@ -180,12 +179,12 @@ async def dispatch_alerts(
             domain_id=domain.id,
             event_type=EventType.ALERT_SENT if success else EventType.ALERT_FAILED,
             new_status=new_status,
-            message=f"{'Sent' if success else 'Failed'} {config.method} alert to {config.target}: {context['subject']}",
+            message=f"{'Sent' if success else 'Failed'} {config.method} alert to {config.target}: {context['subject']}",  # noqa: E501
             success=success,
         )
         db.add(event)
 
         if success:
-            config.last_triggered_at = datetime.now(timezone.utc)
+            config.last_triggered_at = datetime.now(UTC)
 
     db.commit()

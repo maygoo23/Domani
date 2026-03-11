@@ -1,21 +1,18 @@
 """Domain CRUD and action routes."""
 import logging
-from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, Request, Form, HTTPException
+from fastapi import APIRouter, Depends, Form, HTTPException, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..models.domain import Domain
 from ..models.event import DomainEvent, EventType
-from ..schemas.domain import DomainCreate, DomainUpdate, validate_domain_name
+from ..schemas.domain import validate_domain_name
 from ..services import scheduler_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/domains")
-templates = Jinja2Templates(directory="app/templates")
 
 
 def flash(request: Request, message: str, category: str = "info") -> None:
